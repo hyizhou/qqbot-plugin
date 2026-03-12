@@ -125,8 +125,6 @@ Scan to join the QQ group chat
 
 </details>
 
-> For a deep dive into rich media capabilities, see the [Media Guide](docs/qqbot-media-guide.md).
-
 ---
 
 ## ⭐ Star History
@@ -421,7 +419,6 @@ openclaw gateway restart
 
 ## 📚 Documentation
 
-- [Rich Media Guide](docs/qqbot-media-guide.md) — images, voice, video, files
 - [Command Reference](docs/commands.md) — OpenClaw CLI commands
 - [Changelog](docs/changelog/) — release notes ([latest: 1.5.4](docs/changelog/1.5.4.md))
 

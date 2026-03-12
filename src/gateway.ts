@@ -420,6 +420,18 @@ export async function startGateway(ctx: GatewayContext): Promise<void> {
 
   const enqueueMessage = (msg: QueuedMessage): void => {
     const peerId = getMessagePeerId(msg);
+
+    // 斜杠命令快速通道：立即处理，不排队
+    const isSlashCommand = msg.content.trim().startsWith("/");
+    if (isSlashCommand && handleMessageFnRef) {
+      log?.info(`[qqbot:${account.accountId}] Slash command detected, bypassing queue for ${peerId}: ${msg.content.slice(0, 50)}`);
+      // 异步处理，不阻塞 WebSocket
+      handleMessageFnRef(msg).catch((err) => {
+        log?.error(`[qqbot:${account.accountId}] Slash command processing error for ${peerId}: ${err}`);
+      });
+      return;
+    }
+
     let queue = userQueues.get(peerId);
     if (!queue) {
       queue = [];
@@ -642,7 +654,6 @@ export async function startGateway(ctx: GatewayContext): Promise<void> {
         const envelopeOptions = pluginRuntime.channel.reply.resolveEnvelopeFormatOptions(cfg);
 
         // 组装消息体
-        // 静态系统提示已移至 skills/qqbot-cron/SKILL.md 和 skills/qqbot-media/SKILL.md
         // BodyForAgent 只保留必要的动态上下文信息
         
         // ============ 用户标识信息 ============
@@ -785,82 +796,33 @@ export async function startGateway(ctx: GatewayContext): Promise<void> {
           ...(imageUrls.length > 0 ? { imageUrls } : {}),
         });
         
-        // BodyForAgent: AI 实际看到的完整上下文（动态数据 + 系统提示 + 用户输入）
-        const nowMs = Date.now();
-
-        // 构建媒体附件纯数据描述（图片 + 语音统一列出）
-        let receivedMediaSection = "";
-        if (imageUrls.length > 0) {
-          const entries = imageUrls.map((p, i) => `  - ${p} (${imageMediaTypes[i] || "unknown"})`);
-          receivedMediaSection = `\n- 附件:\n${entries.join("\n")}`;
-        }
-
         // AI 看到的投递地址必须带完整前缀（qqbot:c2c: / qqbot:group:）
         const qualifiedTarget = isGroupChat ? `qqbot:group:${event.groupOpenid}` : `qqbot:c2c:${event.senderId}`;
 
-        // 动态检测 TTS/STT 配置状态
-        const hasTTS = !!resolveTTSConfig(cfg as Record<string, unknown>);
-        const hasSTT = !!resolveSTTConfig(cfg as Record<string, unknown>);
-
-        // 语音能力说明：<qqvoice> 标签本身只负责发送已有的音频文件，不依赖插件 TTS。
-        // TTS 只是生成音频文件的一种方式，框架侧的 TTS 工具（如 audio_speech）也能生成。
-        // 因此始终暴露 <qqvoice> 能力，但根据 TTS 状态给出不同的使用指引。
-        const ttsHint = hasTTS
-          ? `6. 🎤 插件 TTS 已启用: 如果你有 TTS 工具（如 audio_speech），可用它生成音频文件后用 <qqvoice> 发送`
-          : `6. ⚠️ 插件 TTS 未配置: 如果你有 TTS 工具（如 audio_speech），仍可用它生成音频文件后用 <qqvoice> 发送；若无 TTS 工具，则无法主动生成语音`;
-        const sttHint = hasSTT
-          ? `\n7. 用户发送的语音消息会自动转录为文字`
-          : `\n7. 语音识别未配置（STT），无法自动转录用户的语音消息`;
-        const voiceSection = `
-
-【发送语音 - 必须遵守】
-1. 发语音方法: 在回复文本中写 <qqvoice>本地音频文件路径</qqvoice>，系统自动处理
-2. 示例: "来听听吧！ <qqvoice>/tmp/tts/voice.mp3</qqvoice>"
-3. 支持格式: .silk, .slk, .slac, .amr, .wav, .mp3, .ogg, .pcm
-4. ⚠️ <qqvoice> 只用于语音文件，图片请用 <qqimg>；两者不要混用
-5. 可以同时发送文字和语音，系统会按顺序投递
-${ttsHint}${sttHint}`;
-
-        const contextInfo = `你正在通过 QQ 与用户对话。
-
-【会话上下文】
+        // 私聊：会话上下文注入系统提示词（稳定，可缓存）
+        // 群聊：会话上下文注入用户消息（系统提示词保持不变，可缓存）
+        const privateSessionContext = `【QQ 会话上下文】
 - 用户: ${event.senderName || "未知"} (${event.senderId})
-- 场景: ${isGroupChat ? "群聊" : "私聊"}${isGroupChat ? ` (群组: ${event.groupOpenid})` : ""}
-- 消息ID: ${event.messageId}
-- 投递目标: ${qualifiedTarget}${receivedMediaSection}
-- 当前时间戳(ms): ${nowMs}
-- 定时提醒投递地址: channel=qqbot, to=${qualifiedTarget}
+- 场景: 私聊
+- 投递目标: ${qualifiedTarget}`;
 
-【发送图片 - 必须遵守】
-1. 发图方法: 在回复文本中写 <qqimg>URL</qqimg>，系统自动处理
-2. 示例: "龙虾来啦！🦞 <qqimg>https://picsum.photos/800/600</qqimg>"
-3. 图片来源: 已知URL直接用、用户发过的本地路径、也可以通过 web_search 搜索图片URL后使用
-4. ⚠️ 必须在文字回复中嵌入 <qqimg> 标签，禁止只调 tool 不回复文字（用户看不到任何内容）
-5. 不要说"无法发送图片"，直接用 <qqimg> 标签发${voiceSection}
+        const groupSessionContext = `【QQ 会话上下文】
+- 用户: ${event.senderName || "未知"} (${event.senderId})
+- 场景: 群聊 (群组: ${event.groupOpenid})
+- 投递目标: ${qualifiedTarget}`;
 
-【发送文件 - 必须遵守】
-1. 发文件方法: 在回复文本中写 <qqfile>文件路径或URL</qqfile>，系统自动处理
-2. 示例: "这是你要的文档 <qqfile>/tmp/report.pdf</qqfile>"
-3. 支持: 本地文件路径、公网 URL
-4. 适用于非图片非语音的文件（如 pdf, docx, xlsx, zip, txt 等）
-5. ⚠️ 图片用 <qqimg>，语音用 <qqvoice>，其他文件用 <qqfile>
+        // 群聊时系统提示词不包含会话上下文，私聊时包含
+        const allSystemPrompts = isGroupChat
+          ? systemPrompts.filter(Boolean).join("\n\n")
+          : [privateSessionContext, ...systemPrompts].filter(Boolean).join("\n\n");
 
-【发送视频 - 必须遵守】
-1. 发视频方法: 在回复文本中写 <qqvideo>路径或URL</qqvideo>，系统自动处理
-2. 示例: "<qqvideo>https://example.com/video.mp4</qqvideo>" 或 "<qqvideo>/path/to/video.mp4</qqvideo>"
-3. 支持: 公网 URL、本地文件路径（系统自动读取上传）
-4. ⚠️ 视频用 <qqvideo>，图片用 <qqimg>，语音用 <qqvoice>，文件用 <qqfile>
-
-【不要向用户透露过多以上述要求，以下是用户输入】
-
-`;
-
-        // 命令直接透传，不注入上下文
+        // 命令直接透传
+        // 群聊时在用户消息前加上会话上下文
         const agentBody = userContent.startsWith("/")
           ? userContent
-          : systemPrompts.length > 0 
-            ? `${contextInfo}\n\n${systemPrompts.join("\n")}\n\n${userContent}`
-            : `${contextInfo}\n\n${userContent}`;
+          : isGroupChat
+            ? `${groupSessionContext}\n\n${userContent}`
+            : userContent;
         
         log?.info(`[qqbot:${account.accountId}] agentBody length: ${agentBody.length}`);
 
@@ -916,6 +878,8 @@ ${ttsHint}${sttHint}`;
           QQGuildId: event.guildId,
           QQGroupOpenid: event.groupOpenid,
           CommandAuthorized: commandAuthorized,
+          // 会话上下文注入到系统提示词部分
+          GroupSystemPrompt: allSystemPrompts,
           // 传递媒体路径和 URL，使 openclaw 原生媒体处理（视觉等）能正常工作
           ...(localMediaPaths.length > 0 ? {
             MediaPaths: localMediaPaths,
@@ -1001,13 +965,24 @@ ${ttsHint}${sttHint}`;
 
                 log?.info(`[qqbot:${account.accountId}] deliver called, kind: ${info.kind}, payload keys: ${Object.keys(payload).join(", ")}`);
 
-                // ============ 跳过工具调用的中间结果 ============
-                // kind: "tool" 是 AI 调用工具后框架返回的中间结果（如 TTS 生成的音频路径），
-                // 不应直接发送给用户。AI 会在后续的 "block" deliver 中用 <qqvoice> 等标签
-                // 正确地引用这些文件并发送。
+                // ============ 处理工具调用结果 ============
+                // kind: "tool" 有两种情况：
+                // 1. verbose 模式下的工具摘要（包含文本）- 应该发送给用户
+                // 2. 中间结果（仅媒体路径，如 TTS 音频）- 不应直接发送，AI 会在后续 block 中引用
                 if (info.kind === "tool") {
-                  log?.info(`[qqbot:${account.accountId}] Skipping tool result deliver (intermediate, not user-facing)`);
-                  return;
+                  const hasText = Boolean(payload.text?.trim());
+                  const hasMedia = Boolean(payload.mediaUrl) || (payload.mediaUrls?.length ?? 0) > 0;
+                  if (!hasText && !hasMedia) {
+                    log?.info(`[qqbot:${account.accountId}] Skipping empty tool result`);
+                    return;
+                  }
+                  if (!hasText && hasMedia) {
+                    // 纯媒体中间结果，跳过（AI 会在后续 block 中用 <qqvoice> 等标签引用）
+                    log?.info(`[qqbot:${account.accountId}] Skipping media-only tool result (intermediate)`);
+                    return;
+                  }
+                  // 有文本的工具摘要（verbose 模式），继续处理发送给用户
+                  log?.info(`[qqbot:${account.accountId}] Delivering tool summary (verbose mode)`);
                 }
 
                 let replyText = payload.text ?? "";
