@@ -8,6 +8,8 @@
 
 **让你的 AI 助手接入 QQ — 私聊、群聊、富媒体，一个插件全搞定。**
 
+> 📌 **Fork 自 [sliverp/qqbot](https://github.com/sliverp/qqbot)** — 本项目基于原项目修改
+
 [![npm version](https://img.shields.io/npm/v/@sliverp/qqbot?color=blue&label=npm)](https://www.npmjs.com/package/@sliverp/qqbot)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 [![QQ Bot](https://img.shields.io/badge/QQ_Bot-API_v2-red)](https://bot.q.qq.com/wiki/)

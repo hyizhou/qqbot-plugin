@@ -10,3 +10,6 @@ openclaw.json
 # E2E tests
 tests/.env
 tests/reports/
+
+CLAUDE.md
+CHANGES.md

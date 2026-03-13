@@ -8,6 +8,8 @@
 
 **Connect your AI assistant to QQ — private chat, group chat, and rich media, all in one plugin.**
 
+> 📌 **Fork of [sliverp/qqbot](https://github.com/sliverp/qqbot)**
+
 [![npm version](https://img.shields.io/npm/v/@sliverp/qqbot?color=blue&label=npm)](https://www.npmjs.com/package/@sliverp/qqbot)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 [![QQ Bot](https://img.shields.io/badge/QQ_Bot-API_v2-red)](https://bot.q.qq.com/wiki/)

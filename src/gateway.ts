@@ -804,12 +804,12 @@ export async function startGateway(ctx: GatewayContext): Promise<void> {
         const privateSessionContext = `【QQ 会话上下文】
 - 用户: ${event.senderName || "未知"} (${event.senderId})
 - 场景: 私聊
-- 投递目标: ${qualifiedTarget}`;
+- 投递目标: ${qualifiedTarget}（定时任务请使用此完整地址）`;
 
         const groupSessionContext = `【QQ 会话上下文】
 - 用户: ${event.senderName || "未知"} (${event.senderId})
 - 场景: 群聊 (群组: ${event.groupOpenid})
-- 投递目标: ${qualifiedTarget}`;
+- 投递目标: ${qualifiedTarget}（定时任务请使用此完整地址）`;
 
         // 群聊时系统提示词不包含会话上下文，私聊时包含
         const allSystemPrompts = isGroupChat
