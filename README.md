@@ -10,20 +10,25 @@
 
 > 📌 **Fork of [sliverp/qqbot](https://github.com/sliverp/qqbot)**
 
-[![npm version](https://img.shields.io/npm/v/@sliverp/qqbot?color=blue&label=npm)](https://www.npmjs.com/package/@sliverp/qqbot)
+## 📝 Differences from Original
+
+This fork is optimized for personal use scenarios:
+
+| Change | Description |
+|--------|-------------|
+| 🐛 **Fixed verbose mode** | `/verbose on` command didn't display tool calls in qqbot, now fixed |
+| 🗑️ **Removed Skills** | Removed `qqbot-media` and `qqbot-cron` skills to simplify the plugin |
+| 🚀 **Slash command fast lane** | Commands starting with `/` skip message queue for immediate execution |
+| 💾 **Optimized system prompt injection** | Original injected full context in every user message (wasting tokens); this version injects session info only once in system prompt |
+| 📎 **Official file sending** | Uses OpenClaw's recommended message tool for file sending instead of custom tags |
+
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 [![QQ Bot](https://img.shields.io/badge/QQ_Bot-API_v2-red)](https://bot.q.qq.com/wiki/)
 [![Platform](https://img.shields.io/badge/platform-OpenClaw-orange)](https://github.com/sliverp/openclaw)
 [![Node.js](https://img.shields.io/badge/Node.js->=18-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
-<br/>
-
 **[简体中文](README.zh.md) | English**
-
-Scan to join the QQ group chat
-
-<img width="300" height="540" alt="Clipboard_Screenshot_1773047715" src="https://github.com/user-attachments/assets/4d2d2337-229a-42ad-97ab-8a6d0607f296" />
 
 
 </div>
@@ -129,16 +134,6 @@ Scan to join the QQ group chat
 
 ---
 
-## ⭐ Star History
-
-<div align="center">
-
-[![Star History Chart](https://api.star-history.com/svg?repos=sliverp/qqbot&type=date&legend=top-left)](https://www.star-history.com/#sliverp/qqbot&type=date&legend=top-left)
-
-</div>
-
----
-
 ## 🚀 Getting Started
 
 ### Step 1 — Create a QQ Bot on the QQ Open Platform
@@ -164,11 +159,8 @@ Scan to join the QQ group chat
 ### Step 2 — Install the Plugin
 
 ```bash
-# Via OpenClaw CLI (recommended)
-openclaw plugins install @sliverp/qqbot@latest
-
-# Or from source
-git clone https://github.com/sliverp/qqbot.git && cd qqbot
+# From source
+git clone https://github.com/hyizhou/qqbot-plugin.git && cd qqbot-plugin
 openclaw plugins install .
 ```
 
@@ -349,48 +341,7 @@ STT supports two-level configuration with priority fallback:
 
 ## 🔄 Upgrade
 
-### Via OpenClaw / npm (Recommended)
-
-> For installations via `openclaw plugins install`
-
-```bash
-openclaw plugins upgrade @sliverp/qqbot@latest
-```
-
-### Via npx
-
-```bash
-npx -y @sliverp/qqbot@latest upgrade
-```
-
-### Via upgrade-and-run.sh (One-Click)
-
-```bash
-bash ./upgrade-and-run.sh
-```
-
-When no `--appid` / `--secret` is provided, the script reads existing config from `~/.openclaw/openclaw.json` automatically.
-
-```bash
-# First-time or override credentials
-bash ./upgrade-and-run.sh --appid YOUR_APPID --secret YOUR_SECRET
-```
-
-<details>
-<summary>Full Options</summary>
-
-| Option | Description |
-|--------|-------------|
-| `--appid <id>` | QQ Bot AppID |
-| `--secret <secret>` | QQ Bot AppSecret |
-| `--markdown <yes\|no>` | Enable Markdown format (default: no) |
-| `-h, --help` | Show help |
-
-Environment variables `QQBOT_APPID`, `QQBOT_SECRET`, `QQBOT_TOKEN` (AppID:Secret) are also supported.
-
-</details>
-
-### Via pull-latest.sh (Git Source)
+### Via pull-latest.sh
 
 ```bash
 bash ./pull-latest.sh
@@ -410,10 +361,8 @@ bash ./pull-latest.sh --repo <git-url>          # use a different repo
 ### From Source (Manual)
 
 ```bash
-git clone https://github.com/sliverp/qqbot.git && cd qqbot
-bash ./scripts/upgrade.sh
+git clone https://github.com/hyizhou/qqbot-plugin.git && cd qqbot-plugin
 openclaw plugins install .
-openclaw channels add --channel qqbot --token "AppID:AppSecret"
 openclaw gateway restart
 ```
 

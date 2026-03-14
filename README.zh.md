@@ -10,18 +10,23 @@
 
 > 📌 **Fork 自 [sliverp/qqbot](https://github.com/sliverp/qqbot)** — 本项目基于原项目修改
 
-[![npm version](https://img.shields.io/npm/v/@sliverp/qqbot?color=blue&label=npm)](https://www.npmjs.com/package/@sliverp/qqbot)
+## 📝 与原版的差异
+
+本 fork 版本针对个人使用场景进行了优化，主要变更：
+
+| 变更 | 说明 |
+|------|------|
+| 🐛 **修复 verbose 模式** | `/verbose on` 命令原版在 qqbot 中不显示工具调用过程，现已修复 |
+| 🗑️ **移除 Skills** | 删除了 `qqbot-media` 和 `qqbot-cron` 两个 skill，简化插件体积 |
+| 🚀 **斜杠命令快速通道** | 以 `/` 开头的命令跳过消息队列，立即执行 |
+| 💾 **优化系统提示词注入** | 原版每条用户消息都注入完整上下文（含发图/语音说明等），造成大量 token 浪费；本版改为仅在系统提示词中注入一次会话信息 |
+| 📎 **文件发送改用官方模式** | 使用 OpenClaw 官方推荐的 message 工具发送文件，而非自定义标签方式 |
+
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 [![QQ Bot](https://img.shields.io/badge/QQ_Bot-API_v2-red)](https://bot.q.qq.com/wiki/)
 [![Platform](https://img.shields.io/badge/platform-OpenClaw-orange)](https://github.com/sliverp/openclaw)
 [![Node.js](https://img.shields.io/badge/Node.js->=18-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-
-<br/>
-
-扫描二维码加入群聊，一起交流
-
-<img width="316" height="410" alt="QQ 群二维码" src="https://github.com/user-attachments/assets/d079ba89-ecd0-437f-9e66-92319801a325" />
 
 </div>
 
@@ -126,14 +131,6 @@
 
 ---
 
-## ⭐ Star History
-
-<div align="center">
-
-[![Star History Chart](https://api.star-history.com/svg?repos=sliverp/qqbot&type=date&legend=top-left)](https://www.star-history.com/#sliverp/qqbot&type=date&legend=top-left)
-
-</div>
-
 ---
 
 ## 🚀 快速开始
@@ -160,11 +157,8 @@
 ### 第二步 — 安装插件
 
 ```bash
-# 通过 OpenClaw CLI 安装（推荐）
-openclaw plugins install @sliverp/qqbot@latest
-
-# 或从源码安装
-git clone https://github.com/sliverp/qqbot.git && cd qqbot
+# 从源码安装
+git clone https://github.com/hyizhou/qqbot-plugin.git && cd qqbot-plugin
 openclaw plugins install .
 ```
 
@@ -345,48 +339,7 @@ STT 支持两级配置，按优先级查找：
 
 ## 🔄 升级
 
-### 通过 OpenClaw / npm 升级（推荐）
-
-> 仅适用于通过 `openclaw plugins install` 安装的场景
-
-```bash
-openclaw plugins upgrade @sliverp/qqbot@latest
-```
-
-### 通过 npx 升级
-
-```bash
-npx -y @sliverp/qqbot@latest upgrade
-```
-
-### 通过 upgrade-and-run.sh 一键升级
-
-```bash
-bash ./upgrade-and-run.sh
-```
-
-不传 `--appid` / `--secret` 参数时，脚本会自动读取 `~/.openclaw/openclaw.json` 中已有的配置。
-
-```bash
-# 首次配置或需要覆盖时
-bash ./upgrade-and-run.sh --appid YOUR_APPID --secret YOUR_SECRET
-```
-
-<details>
-<summary>完整选项</summary>
-
-| 选项 | 说明 |
-|------|------|
-| `--appid <id>` | QQ 机器人 AppID |
-| `--secret <secret>` | QQ 机器人 AppSecret |
-| `--markdown <yes\|no>` | 是否启用 Markdown 消息格式（默认: no） |
-| `-h, --help` | 显示帮助 |
-
-也支持环境变量：`QQBOT_APPID`、`QQBOT_SECRET`、`QQBOT_TOKEN`（AppID:Secret）。
-
-</details>
-
-### 通过 pull-latest.sh（Git 源码更新）
+### 通过 pull-latest.sh 更新
 
 ```bash
 bash ./pull-latest.sh
@@ -406,10 +359,8 @@ bash ./pull-latest.sh --repo <git-url>          # 使用其他仓库地址
 ### 从源码升级（手动）
 
 ```bash
-git clone https://github.com/sliverp/qqbot.git && cd qqbot
-bash ./scripts/upgrade.sh
+git clone https://github.com/hyizhou/qqbot-plugin.git && cd qqbot-plugin
 openclaw plugins install .
-openclaw channels add --channel qqbot --token "AppID:AppSecret"
 openclaw gateway restart
 ```
 
