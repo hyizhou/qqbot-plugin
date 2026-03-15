@@ -1,6 +1,7 @@
 import WebSocket from "ws";
 import path from "node:path";
 import * as fs from "node:fs";
+import type { OpenClawConfig } from "openclaw/plugin-sdk";
 import type { ResolvedQQBotAccount, WSPayload, C2CMessageEvent, GuildMessageEvent, GroupMessageEvent } from "./types.js";
 import { getAccessToken, getGatewayUrl, sendC2CMessage, sendChannelMessage, sendGroupMessage, clearTokenCache, sendC2CImageMessage, sendGroupImageMessage, sendC2CVoiceMessage, sendGroupVoiceMessage, sendC2CVideoMessage, sendGroupVideoMessage, sendC2CFileMessage, sendGroupFileMessage, initApiConfig, startBackgroundTokenRefresh, stopBackgroundTokenRefresh, sendC2CInputNotify } from "./api.js";
 import { loadSession, saveSession, clearSession, type SessionState } from "./session-store.js";
@@ -278,7 +279,7 @@ function filterInternalMarkers(text: string): string {
 export interface GatewayContext {
   account: ResolvedQQBotAccount;
   abortSignal: AbortSignal;
-  cfg: unknown;
+  cfg: OpenClawConfig;
   onReady?: (data: unknown) => void;
   onError?: (error: Error) => void;
   log?: {
@@ -891,6 +892,33 @@ export async function startGateway(ctx: GatewayContext): Promise<void> {
             MediaUrls: remoteMediaUrls,
             MediaUrl: remoteMediaUrls[0],
           } : {}),
+        });
+
+        // ============ 记录会话信息（用于定时任务投递） ============
+        // 只有私聊时才更新 lastRoute，群聊不需要
+        const updateLastRouteSessionKey = route.lastRoutePolicy === "main"
+          ? route.mainSessionKey
+          : route.sessionKey;
+
+        const storePath = pluginRuntime.channel.session.resolveStorePath(cfg.session?.store, {
+          agentId: route.agentId,
+        });
+
+        await pluginRuntime.channel.session.recordInboundSession({
+          storePath,
+          sessionKey: ctxPayload.SessionKey ?? route.sessionKey,
+          ctx: ctxPayload,
+          updateLastRoute: !isGroupChat
+            ? {
+                sessionKey: updateLastRouteSessionKey,
+                channel: "qqbot",
+                to: toAddress,
+                accountId: route.accountId,
+              }
+            : undefined,
+          onRecordError: (err: unknown) => {
+            log?.error(`[qqbot:${account.accountId}] Failed to record inbound session: ${err}`);
+          },
         });
 
         // 发送消息的辅助函数，带 token 过期重试

@@ -9,6 +9,18 @@ declare module "openclaw/plugin-sdk" {
   // ============ 配置类型 ============
 
   /**
+   * 会话配置
+   */
+  export interface SessionConfig {
+    /** 会话存储路径 */
+    store?: string;
+    /** DM session scoping */
+    dmScope?: string;
+    /** 其他配置字段 */
+    [key: string]: unknown;
+  }
+
+  /**
    * OpenClaw 主配置对象
    */
   export interface OpenClawConfig {
@@ -21,6 +33,8 @@ declare module "openclaw/plugin-sdk" {
       whatsapp?: unknown;
       [key: string]: unknown;
     };
+    /** 会话配置 */
+    session?: SessionConfig;
     /** 其他配置字段 */
     [key: string]: unknown;
   }
