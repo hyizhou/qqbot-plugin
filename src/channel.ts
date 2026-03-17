@@ -167,30 +167,32 @@ export const qqbotPlugin: ChannelPlugin<ResolvedQQBotAccount> = {
      * - channel:channelid -> 频道
      * - 纯 openid（32位十六进制）-> 私聊
      */
-    normalizeTarget: (target: string): { ok: boolean; to?: string; error?: string } => {
+    // 框架运行时通过 TargetNormalizer 调用，期望返回 string | undefined
+    // @ts-expect-error 框架 SDK 类型定义为 NormalizeTargetResult 但运行时行为不同
+    normalizeTarget: (target: string): string | undefined => {
       // 去掉 qqbot: 前缀（如果有）
       const id = target.replace(/^qqbot:/i, "");
 
       // 检查是否是已知格式
       if (id.startsWith("c2c:") || id.startsWith("group:") || id.startsWith("channel:")) {
-        return { ok: true, to: `qqbot:${id}` };
+        return `qqbot:${id}`;
       }
 
       // 检查是否是纯 openid（32位十六进制，不带连字符）
       // QQ Bot OpenID 格式类似: 207A5B8339D01F6582911C014668B77B
       const openIdHexPattern = /^[0-9a-fA-F]{32}$/;
       if (openIdHexPattern.test(id)) {
-        return { ok: true, to: `qqbot:c2c:${id}` };
+        return `qqbot:c2c:${id}`;
       }
 
       // 检查是否是 UUID 格式的 openid（带连字符）
       const openIdUuidPattern = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
       if (openIdUuidPattern.test(id)) {
-        return { ok: true, to: `qqbot:c2c:${id}` };
+        return `qqbot:c2c:${id}`;
       }
 
       // 不认识的格式
-      return { ok: false, error: `Invalid QQ Bot target format: ${target}` };
+      return undefined;
     },
     /**
      * 目标解析器配置
