@@ -1,6 +1,13 @@
+> ⚠️ **This repository is archived.**
+>
+> Tencent has released the official OpenClaw QQ Bot plugin. Please migrate to:
+> **[tencent-connect/openclaw-qqbot](https://github.com/tencent-connect/openclaw-qqbot)**
+>
+> This repository is no longer maintained and is kept for reference only.
+
+---
+
 <div align="center">
-
-
 
 <img width="120" src="https://img.shields.io/badge/🤖-QQ_Bot-blue?style=for-the-badge" alt="QQ Bot" />
 

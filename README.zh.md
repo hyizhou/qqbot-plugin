@@ -1,3 +1,12 @@
+> ⚠️ **本仓库已归档。**
+>
+> 腾讯已发布官方 OpenClaw QQ Bot 插件，建议迁移至官方版本：
+> **[tencent-connect/openclaw-qqbot](https://github.com/tencent-connect/openclaw-qqbot)**
+>
+> 本仓库不再维护，保留仅供参考。
+
+---
+
 <div align="center">
 
 **简体中文 | [English](README.md)**
